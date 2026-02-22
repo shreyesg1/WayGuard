@@ -115,12 +115,19 @@ class AnalyticsService:
                 continue
             coords = df[["latitude", "longitude"]].dropna()
             if not coords.empty:
+                if self.low_ram_mode and len(coords) > 3000:
+                    coords = coords.sample(n=3000, random_state=42)
                 frames.append(coords)
         if not frames:
             return {"days": days, "hotspots": []}
 
         all_coords = pd.concat(frames, ignore_index=True)
-        hotspots = self.risk_scorer.detect_hotspots(all_coords)
+        if self.low_ram_mode and len(all_coords) > 8000:
+            all_coords = all_coords.sample(n=8000, random_state=42)
+
+        # DBSCAN can spike memory usage on small instances. Use a cheaper
+        # grid aggregation in low-RAM deployments.
+        hotspots = self._cheap_hotspots(all_coords) if self.low_ram_mode else self.risk_scorer.detect_hotspots(all_coords)
         if hotspots is None or hotspots.empty:
             return {"days": days, "hotspots": []}
 
@@ -129,6 +136,41 @@ class AnalyticsService:
             cleaned[col] = pd.to_numeric(cleaned[col], errors="coerce")
         cleaned = cleaned.dropna(subset=["center_lat", "center_lon"])
         return {"days": days, "hotspots": cleaned.to_dict(orient="records")}
+
+    @staticmethod
+    def _cheap_hotspots(coords: pd.DataFrame, grid_size_deg: float = 0.01, top_n: int = 120) -> pd.DataFrame:
+        """Low-memory hotspot fallback using simple spatial bins."""
+        if coords is None or coords.empty:
+            return pd.DataFrame()
+
+        local = coords.copy()
+        local["latitude"] = pd.to_numeric(local["latitude"], errors="coerce")
+        local["longitude"] = pd.to_numeric(local["longitude"], errors="coerce")
+        local = local.dropna(subset=["latitude", "longitude"])
+        local = local[
+            (local["latitude"].between(40.4, 40.95))
+            & (local["longitude"].between(-74.25, -73.7))
+        ]
+        if local.empty:
+            return pd.DataFrame()
+
+        local["lat_bin"] = (local["latitude"] / grid_size_deg).round().astype(int)
+        local["lon_bin"] = (local["longitude"] / grid_size_deg).round().astype(int)
+        grouped = (
+            local.groupby(["lat_bin", "lon_bin"], as_index=False)
+            .agg(center_lat=("latitude", "mean"), center_lon=("longitude", "mean"), count=("latitude", "size"))
+            .sort_values("count", ascending=False)
+            .head(top_n)
+        )
+        if grouped.empty:
+            return pd.DataFrame()
+
+        # Approximate each bin's area and density for UI compatibility.
+        area_km2 = max(0.01, (grid_size_deg * 111.0) * (grid_size_deg * 85.0))
+        grouped["area_km2"] = area_km2
+        grouped["density"] = grouped["count"] / area_km2
+        grouped["cluster_id"] = range(len(grouped))
+        return grouped[["cluster_id", "center_lat", "center_lon", "count", "area_km2", "density"]]
 
     def overview(self, days: int) -> dict:
         data = self.fetch_all_cached(days=days)
