@@ -1,1 +1,1 @@
-"""CityScope FastAPI backend package."""
+"""WayGuard FastAPI backend package."""

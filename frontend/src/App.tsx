@@ -10,10 +10,10 @@ export default function App() {
   return (
     <div className="app-shell">
       <header className="topbar glass">
-        <div className="brand-wrap" aria-label="CityScope branding">
+        <div className="brand-wrap" aria-label="WayGuard branding">
           <div className="brand-dot" />
           <div>
-            <h1>CityScope</h1>
+            <h1>WayGuard</h1>
             <p>Location-aware route recommendations and urban incident analytics</p>
           </div>
         </div>

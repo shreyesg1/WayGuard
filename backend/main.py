@@ -22,7 +22,7 @@ from backend.services.route_explainer_service import RouteExplainerService
 load_dotenv("backend/.env")
 
 
-app = FastAPI(title="CityScope API", version="0.1.0")
+app = FastAPI(title="WayGuard API", version="0.1.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

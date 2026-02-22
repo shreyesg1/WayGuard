@@ -1,1 +1,1 @@
-"""Service layer for CityScope API."""
+"""Service layer for WayGuard API."""

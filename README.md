@@ -1,6 +1,6 @@
-# CityScope (React + FastAPI)
+# WayGuard (React + FastAPI)
 
-CityScope is a location-aware routing and urban incident analytics demo for NYC.
+WayGuard is a location-aware routing and urban incident analytics demo for NYC.
 
 - **Frontend:** React + Vite + Leaflet
 - **Backend:** FastAPI reusing existing Python data/risk/routing modules

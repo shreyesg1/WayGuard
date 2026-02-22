@@ -30,7 +30,7 @@ def geocode_address_nominatim(query: str) -> Optional[LatLon]:
     response = requests.get(
         url,
         params={"q": query, "format": "json", "limit": 1},
-        headers={"User-Agent": "CityScope/1.0"},
+        headers={"User-Agent": "WayGuard/1.0"},
         timeout=15,
     )
     response.raise_for_status()
@@ -54,7 +54,7 @@ def geocode_suggestions_nominatim(query: str, limit: int = 5) -> List[Dict]:
             "limit": max(1, min(limit, 8)),
             "dedupe": 1,
         },
-        headers={"User-Agent": "CityScope/1.0"},
+        headers={"User-Agent": "WayGuard/1.0"},
         timeout=15,
     )
     response.raise_for_status()
