@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node ./node_modules/vite/bin/vite.js build",
+    "build": "npx --yes vite@7.3.1 build",
     "preview": "vite preview"
   },
   "dependencies": {
