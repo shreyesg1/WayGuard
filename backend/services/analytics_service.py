@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
+import os
 from typing import Dict
 
 import pandas as pd
@@ -14,9 +15,20 @@ class AnalyticsService:
     def __init__(self) -> None:
         self.fetcher = DataFetcher()
         self.risk_scorer = RiskScorer()
+        # Keep payloads small on low-memory hosts (e.g., 512MB Render instances).
+        self.low_ram_mode = os.getenv("WAYGUARD_LOW_RAM", "1").strip().lower() not in {"0", "false", "no"}
 
     def fetch_all(self, days: int) -> Dict[str, pd.DataFrame]:
-        crime_df = self.fetcher.fetch_crime_data(days=days, max_records=40000)
+        if self.low_ram_mode:
+            crime_max = 12000
+            complaints_max = 12000
+            health_max = 6000
+        else:
+            crime_max = 40000
+            complaints_max = 60000
+            health_max = 20000
+
+        crime_df = self.fetcher.fetch_crime_data(days=days, max_records=crime_max)
         data = {
             "crime": crime_df,
             "complaints": pd.DataFrame(),
@@ -35,19 +47,19 @@ class AnalyticsService:
         window_end = crime_dates.max()
         data["complaints"] = self.fetcher.fetch_311_data(
             days=days,
-            max_records=60000,
+            max_records=complaints_max,
             start_date=window_start,
             end_date=window_end,
         )
         data["health"] = self.fetcher.fetch_health_data(
             days=days,
-            max_records=20000,
+            max_records=health_max,
             start_date=window_start,
             end_date=window_end,
         )
         return data
 
-    @lru_cache(maxsize=8)
+    @lru_cache(maxsize=2)
     def fetch_all_cached(self, days: int) -> Dict[str, pd.DataFrame]:
         return self.fetch_all(days=days)
 
@@ -69,7 +81,7 @@ class AnalyticsService:
     def _daily_trend(df: pd.DataFrame, date_col: str) -> list[dict]:
         if df is None or df.empty or date_col not in df.columns:
             return []
-        local = df.copy()
+        local = df[[date_col]].copy()
         local[date_col] = pd.to_datetime(local[date_col], errors="coerce")
         local = local.dropna(subset=[date_col])
         if local.empty:
@@ -155,7 +167,7 @@ class AnalyticsService:
         }
 
     @staticmethod
-    def _build_heat_points(data: Dict[str, pd.DataFrame], max_points: int = 20000) -> list[dict]:
+    def _build_heat_points(data: Dict[str, pd.DataFrame], max_points: int = 6000) -> list[dict]:
         frames = []
         for df in data.values():
             if df is None or df.empty:

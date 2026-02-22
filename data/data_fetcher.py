@@ -84,6 +84,7 @@ class DataFetcher:
 
         all_data = []
         offset = 0
+        batch_size = min(5000, int(max_records))
         while True:
             params = {
                 "$where": (
@@ -91,7 +92,7 @@ class DataFetcher:
                     f"and '{end_dt.strftime('%Y-%m-%dT23:59:59')}'"
                 ),
                 "$select": "created_date,complaint_type,descriptor,latitude,longitude,incident_zip,borough",
-                "$limit": 20000,
+                "$limit": batch_size,
                 "$offset": offset,
                 "$order": "created_date DESC",
             }
@@ -99,9 +100,9 @@ class DataFetcher:
             if not data:
                 break
             all_data.extend(data)
-            if len(data) < 20000 or len(all_data) >= max_records:
+            if len(data) < batch_size or len(all_data) >= max_records:
                 break
-            offset += 20000
+            offset += batch_size
             time.sleep(0.2)
 
         if not all_data:
