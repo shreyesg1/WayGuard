@@ -12,5 +12,20 @@
         "crime": 0.4,
         "complaints": 0.3,
         "health": 0.3
+    },
+    "routing": {
+        "default_mode": "walking",
+        "default_alternatives": 3,
+        "h3_resolution": 10,
+        "decay_half_life_days": 30,
+        "risk_spread_rings": 1,
+        "risk_ring_decay": 0.55,
+        "use_time_decay_for_navigation": false,
+        "overlap_rings_for_lookup": 1,
+        "overlap_ring_decay": 0.6,
+        "sampling_meters": {
+            "walking": 30,
+            "driving": 75
+        }
     }
 } 

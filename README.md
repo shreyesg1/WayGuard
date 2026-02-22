@@ -1,62 +1,120 @@
-# CityScope - Urban Risk Intelligence Dashboard
+# CityScope (React + FastAPI)
 
-An interactive dashboard that helps identify and visualize infrastructure and safety risks across urban neighborhoods using real-time data from NYC Open Data.
+CityScope is a location-aware routing and urban incident analytics demo for NYC.
 
-## Features
+- **Frontend:** React + Vite + Leaflet
+- **Backend:** FastAPI reusing existing Python data/risk/routing modules
+- **Routing:** OpenRouteService
+- **Data:** NYC Open Data (311, NYPD, restaurant inspections)
 
-- Real-time data integration with NYC Open Data APIs
-- Interactive risk map visualization
-- Trend analysis for different incident types
-- Risk hotspot detection and analysis
-- Customizable risk weights for different factors
+## Project Structure
 
-## Live Demo
+- `backend/` - FastAPI app and service layer
+- `frontend/` - React UI (Navigation + Analytics tabs)
+- `data/`, `models/`, `routing/`, `utils/` - shared Python logic
 
-Visit the live dashboard at: [CityScope Dashboard](https://cityscope.streamlit.app)
+## Prerequisites
 
-## Data Sources
+- Python 3.10+
+- Node.js 18+ and npm
 
-The dashboard uses the following NYC Open Data APIs:
-- 311 Service Requests
-- NYPD Complaint Data
-- Restaurant Inspection Results
+## Backend Setup
 
-## Local Development
+1. Install Python dependencies:
 
-1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/cityscope.git
-cd cityscope
-```
-
-2. Create a virtual environment and install dependencies:
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-3. Create a `.streamlit/secrets.toml` file with your API credentials:
-```toml
-nyc_open_data_token = "your_api_token"
-```
+2. Create `backend/.env`:
 
-4. Run the application:
 ```bash
-streamlit run app.py
+touch backend/.env
 ```
 
-## Configuration
+On Windows PowerShell:
 
-The application can be configured through the `config.json` file:
-- Map settings (center coordinates, zoom level)
-- API endpoints
-- Risk scoring parameters
+```powershell
+New-Item -Path backend/.env -ItemType File
+```
 
-## Contributing
+3. Set secrets in `backend/.env`:
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+```env
+OPENROUTESERVICE_API_KEY=your_openrouteservice_key
+NYC_OPEN_DATA_TOKEN=your_nyc_open_data_token
+GEMINI_API_KEY=your_gemini_api_key
+GEMINI_MODEL=gemini-2.0-flash
+```
 
-## License
+4. Run backend:
 
-This project is licensed under the MIT License - see the LICENSE file for details. 
+```bash
+uvicorn backend.main:app --reload --port 8000
+```
+
+## Frontend Setup
+
+1. Install frontend dependencies:
+
+```bash
+cd frontend
+npm install
+```
+
+2. Create frontend env file:
+
+```bash
+cp .env.example .env
+```
+
+On Windows PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+3. Confirm API URL in `frontend/.env`:
+
+```env
+VITE_API_BASE_URL=http://localhost:8000
+```
+
+4. Run frontend:
+
+```bash
+npm run dev
+```
+
+Open `http://localhost:5173`.
+
+## Demo Validation Checklist
+
+### Navigation tab
+
+- Type in origin and destination fields.
+- Verify inline autocomplete suggestions appear directly under each input.
+- Select suggestions and verify text input is replaced with selected address.
+- Click **Compute Routes** and verify:
+  - map renders recommended + alternative routes
+  - route cards show ETA, distance, and risk metrics
+
+### Analytics tab
+
+- Confirm summary cards load.
+- Confirm trend chart renders for the selected day window.
+- Confirm hotspot map renders points.
+
+## API Endpoints
+
+- `GET /health`
+- `GET /geocode/suggest?q=...`
+- `POST /navigation/compute`
+- `GET /analytics/summary?days=...`
+- `GET /analytics/trends?days=...`
+- `GET /analytics/hotspots?days=...`
+
+## Notes
+
+- Use neutral language in UI: higher incident density, not certainty of outcomes.
+- Reported incidents are not complete ground truth and may include reporting/geocoding bias.
