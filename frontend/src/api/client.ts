@@ -11,7 +11,21 @@ import type {
   NavigationResponse,
 } from "../types";
 
-const baseURL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+const configuredBaseURL = import.meta.env.VITE_API_BASE_URL?.trim();
+const isLocalHost =
+  typeof window !== "undefined" &&
+  (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+
+// In local development we default to localhost backend.
+// In deployed environments, VITE_API_BASE_URL must be explicitly configured.
+const baseURL = configuredBaseURL || (isLocalHost ? "http://localhost:8000" : "");
+
+if (!baseURL && import.meta.env.PROD) {
+  // eslint-disable-next-line no-console
+  console.error(
+    "Missing VITE_API_BASE_URL in production. Set it to your deployed backend URL (https://...).",
+  );
+}
 
 const api = axios.create({
   baseURL,

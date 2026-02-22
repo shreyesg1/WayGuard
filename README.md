@@ -80,6 +80,12 @@ Copy-Item .env.example .env
 VITE_API_BASE_URL=http://localhost:8000
 ```
 
+For deployed frontend (for example on Vercel), set `VITE_API_BASE_URL` to your deployed backend URL:
+
+```env
+VITE_API_BASE_URL=https://your-backend-domain
+```
+
 4. Run frontend:
 
 ```bash
