@@ -166,6 +166,9 @@ export default function NavigationPage() {
         title="Safer Route Planner"
         subtitle="Find lower incident-density paths with transparent tradeoffs."
       >
+        <p className="muted">
+          NYC-only beta: safer-route risk scoring currently supports New York City locations only.
+        </p>
         <div className="form-grid">
           <div className="planner-section">
             <h4>Origin</h4>
